@@ -2,6 +2,7 @@ const { Client, IntentsBitField, Collection } = require('discord.js');
 const client = new Client({intents: new IntentsBitField(53608447)});
 const loadCommands = require('./loaders/loadCommands');
 const loadEvents = require('./loaders/loadEvents');
+const manageTimers = require('./events/layers/voiceManager');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -9,6 +10,7 @@ client.commands = new Collection();
 
 loadCommands(client);
 loadEvents(client);
+manageTimers(client);
 
 client.on("messageCreate", message => {
 
