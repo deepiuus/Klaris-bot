@@ -2,7 +2,6 @@ const { Collection } = require('discord.js');
 
 const Timers = new Collection();
 
-
 const layers = {
     'Default': '1028732111215153182',
     'Default': '1028732111215153182',
