@@ -23,13 +23,17 @@ const Time = {
     'layer 6': 6 * 60 * 1000,
     'layer 7': 7 * 60 * 1000,
     'layer 8': 8 * 60 * 1000,
-    'layer 9': 9 * 60 * 1000
+    'layer 9': 1 * 60 * 1000
 };
 
 function setInactivityTimer(channel) {
 
     console.log(`Setting inactivity timer for channel ${channel.name} (${channel.id})`);
-    const layerName = Object.keys(layers).find(key => layers[key] === channel.id) || 'Default';
+    const keys = Object.keys(layers);
+    const layerName = keys.find(key => layers[key] === channel.id) || 'Default';
+    const currentIndex = keys.indexOf(layerName);
+    const nextLayer = keys[currentIndex + 1];
+    const nextLayerId = layers[nextLayer];
     const time = Time[layerName];
     let remainingTime = time;
     const countdownInterval = setInterval(() => {
@@ -44,11 +48,14 @@ function setInactivityTimer(channel) {
         console.log(`Inactivity timer triggered for channel ${channel.name} (${channel.id})`);
         console.log(`Channel type: ${channel.type}`);
         if (channel.type === '2') {
-            return;
+            console.log(`ce channel est génant`);
         } else {
             channel.members.forEach(member => {
                 console.log(`Disconnecting member ${member.user.tag} from channel ${channel.name}`);
-                member.voice.disconnect().catch(console.error);
+                if (member.voice.channel)
+                    member.voice.setChannel(nextLayerId).catch(console.error);
+                else
+                    console.log(`${member.user.tag} est génant`);
             });
         }
     }, time);
