@@ -4,7 +4,6 @@ const Timers = new Collection();
 
 const layers = {
     'Default': '1028732111215153182',
-    'Default': '1028732111215153182',
     'layer 2': '1057651790683832401',
     'layer 3': '1282024736540459121',
     'layer 4': '1282024752348921938',
