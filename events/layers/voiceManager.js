@@ -1,5 +1,4 @@
 const { Collection } = require('discord.js');
-
 const Timers = new Collection();
 
 const layers = {
@@ -15,38 +14,47 @@ const layers = {
 };
 
 const Time = {
-    'Default': 1 * 60 * 1000,
-    'layer 2': 2 * 60 * 1000,
-    'layer 3': 3 * 60 * 1000,
-    'layer 4': 4 * 60 * 1000,
-    'layer 5': 5 * 60 * 1000,
-    'layer 6': 6 * 60 * 1000,
-    'layer 7': 7 * 60 * 1000,
-    'layer 8': 8 * 60 * 1000,
-    'layer 9': 1 * 60 * 1000
+    'Default': 5 * 60 * 1000,
+    'layer 2': 10 * 60 * 1000,
+    'layer 3': 20 * 60 * 1000,
+    'layer 4': 40 * 60 * 1000,
+    'layer 5': 80 * 60 * 1000,
+    'layer 6': 160 * 60 * 1000,
+    'layer 7': 320 * 60 * 1000,
+    'layer 8': 640 * 60 * 1000,
+    'layer 9': 0 * 60 * 1000
 };
 
 function setInactivityTimer(channel) {
 
-    console.log(`Setting inactivity timer for channel ${channel.name} (${channel.id})`);
+    if (Timers.has(channel.id)) {
+        console.log(`Timer already set for channel ${channel.name} (${channel.id}), skipping.`);
+        return;
+    }
+
     const keys = Object.keys(layers);
     const layerName = keys.find(key => layers[key] === channel.id) || 'Default';
     const currentIndex = keys.indexOf(layerName);
+
+    if (currentIndex === keys.length - 1) {
+        console.log(`No timer set for the last layer: ${layerName} (${channel.id})`);
+        return;
+    }
+
+    console.log(`Setting inactivity timer for channel ${channel.name} (${channel.id})`);
     const nextLayer = keys[currentIndex + 1];
     const nextLayerId = layers[nextLayer];
     const time = Time[layerName];
     let remainingTime = time;
     const countdownInterval = setInterval(() => {
-        remainingTime -= 1000;
+        remainingTime -= 5000;
         console.log(`Time remaining for channel ${channel.name}: ${remainingTime / 1000} seconds`);
-        if (remainingTime <= 0) {
+        if (remainingTime <= 0)
             clearInterval(countdownInterval);
-        }
-    }, 1000);
+    }, 5000);
 
     const timer = setTimeout(() => {
         console.log(`Inactivity timer triggered for channel ${channel.name} (${channel.id})`);
-        console.log(`Channel type: ${channel.type}`);
         if (channel.type === '2') {
             console.log(`ce channel est génant`);
         } else {
@@ -65,6 +73,10 @@ function setInactivityTimer(channel) {
 
 function clearInactivityTimer(channel) {
 
+    if (!channel) {
+        console.log('Channel is null, skipping clearInactivityTimer.');
+        return;
+    }
     console.log(`Clearing inactivity timer for channel ${channel.name} (${channel.id})`);
     const timerObj = Timers.get(channel.id);
     if (timerObj) {
@@ -77,21 +89,26 @@ function clearInactivityTimer(channel) {
 module.exports = (client) => {
 
     client.on('voiceStateUpdate', (oldState, newState) => {
-        console.log("--------------------");
-        console.log(oldState.channel);
-        console.log("--------------------");
-        console.log(newState.channel);
-        console.log("--------------------");
         if (oldState.channelId === null && newState.channelId !== null) {
             console.log(`${newState.member.user.tag} joined channel ${newState.channelId}.`);
-            setInactivityTimer(newState.channel);
+            if (newState.selfMute)
+                setInactivityTimer(newState.channel);
         } else if (oldState.channelId !== null && newState.channelId === null) {
             console.log(`${oldState.member.user.tag} left channel ${oldState.channelId}.`);
             clearInactivityTimer(oldState.channel);
         } else if (oldState.channelId !== null && newState.channelId !== null && oldState.channelId !== newState.channelId) {
             console.log(`${oldState.member.user.tag} switched channels from ${oldState.channelId} to ${newState.channelId}.`);
             clearInactivityTimer(oldState.channel);
+            if (newState.selfMute)
+                setInactivityTimer(newState.channel);
+        }
+        if (!oldState.selfMute && newState.selfMute) {
+            console.log(`${newState.member.user.tag} muted their microphone in channel ${newState.channelId}. Setting timer.`);
             setInactivityTimer(newState.channel);
+        }
+        if (oldState.selfMute && !newState.selfMute) {
+            console.log(`${newState.member.user.tag} unmuted their microphone in channel ${newState.channelId}. Resetting timer.`);
+            clearInactivityTimer(newState.channel);
         }
     });
 };
