@@ -1,5 +1,7 @@
+const alertChannel = "1071202448447901796";
+
 const layers = {
-    'Default': '1028732111215153182',
+    'depths': '1028732111215153182',
     'layer 2': '1057651790683832401',
     'layer 3': '1282024736540459121',
     'layer 4': '1282024752348921938',
@@ -10,8 +12,8 @@ const layers = {
     'layer 9': '1282024969790034063'
 };
 
-const Time = {
-    'Default': 5 * 60 * 1000,
+const timers = {
+    'depths':  1 * 60 * 1000,
     'layer 2': 10 * 60 * 1000,
     'layer 3': 20 * 60 * 1000,
     'layer 4': 40 * 60 * 1000,
@@ -22,14 +24,14 @@ const Time = {
     'layer 9': 0 * 60 * 1000
 };
 
-function setInactivityTimer(client, member) {
+function setInactivityTimer(alerter, client, member) {
 
     if (client.timers.has(member.id)) {
         const timerObj = client.timers.get(member.id);
         if (timerObj) {
             const remainingTime = timerObj.remainingTime;
             console.log(`Because ${member.user.tag} [${member.id}] is already afk :`);
-            console.log(`Time remaining for ${member.user.tag} [${member.id}] in ${member.voice.channel.name} [${member.voice.channel.id}]: ${remainingTime / 1000} second(s).`);
+            console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${remainingTime / 1000} second(s).`);
         }
         return;
     }
@@ -39,7 +41,7 @@ function setInactivityTimer(client, member) {
         return;
     }
     const keys = Object.keys(layers);
-    const layerName = keys.find(key => layers[key] === channel.id) || 'Default';
+    const layerName = keys.find(key => layers[key] === channel.id);
     const currentIndex = keys.indexOf(layerName);
     if (currentIndex === keys.length - 1) {
         console.log(`No timer set for the last layer: ${layerName} [${channel.id}].`);
@@ -48,9 +50,9 @@ function setInactivityTimer(client, member) {
     console.log(`Setting inactivity timer for ${member.user.tag} [${member.id}] in ${channel.name} [${channel.id}].`);
     const nextLayer = keys[currentIndex + 1];
     const nextLayerId = layers[nextLayer];
-    const time = Time[layerName];
+    const time = timers[layerName];
     let remainingTime = time;
-    console.log(`Time remaining for ${member.user.tag} [${member.id}] in ${channel.name} [${channel.id}]: ${remainingTime / 1000} second(s). (15s logs cooldown)`);
+    console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${remainingTime / 1000} second(s). (15s logs cooldown)`);
 
     const countdownInterval = setInterval(() => {
         remainingTime -= 15000;
@@ -62,6 +64,7 @@ function setInactivityTimer(client, member) {
 
     const timer = setTimeout(() => {
         console.log(`Inactivity timer triggered for ${member.user.tag} [${member.id}] in ${channel.name} [${channel.id}].`);
+        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${layerName}... Il a donc atteint le ${nextLayer}. J'espère qu'il n'a pas encore utilisé l'intégralité de la light hook que je lui est donné...`);
         if (member.voice.channel)
             member.voice.setChannel(nextLayerId).catch(console.error);
         else
@@ -89,24 +92,23 @@ function clearInactivityTimer(client, member, previousChannel) {
 module.exports = {
     name: 'voiceStateUpdate',
     run: (client, oldState, newState) => {
+        const alerter = client.channels.cache.get(alertChannel);
         if (oldState.channelId === null && newState.channelId !== null) {
             console.log(`${newState.member.user.tag} [${newState.member.id}] joined ${newState.channel.name} [${newState.channel.id}].`);
-            if (newState.selfMute) {
-                setInactivityTimer(client, newState.member);
-            }
+            if (newState.selfMute)
+                setInactivityTimer(alerter, client, newState.member);
         } else if (oldState.channelId !== null && newState.channelId === null) {
             console.log(`${oldState.member.user.tag} [${oldState.member.id}] left ${oldState.channel.name} [${oldState.channel.id}].`);
             clearInactivityTimer(client, oldState.member, oldState.channel);
         } else if (oldState.channelId !== null && newState.channelId !== null && oldState.channelId !== newState.channelId) {
             console.log(`${oldState.member.user.tag} [${oldState.member.id}] switched from ${oldState.channel.name} [${oldState.channel.id}] to ${newState.channel.name} [${newState.channel.id}].`);
             clearInactivityTimer(client, oldState.member, oldState.channel);
-            if (newState.selfMute) {
-                setInactivityTimer(client, newState.member);
-            }
+            if (newState.selfMute)
+                setInactivityTimer(alerter, client, newState.member);
         }
         if (!oldState.selfMute && newState.selfMute) {
             console.log(`${newState.member.user.tag} [${newState.member.id}] is afk in ${newState.channel.name} [${newState.channel.id}].`);
-            setInactivityTimer(client, newState.member);
+            setInactivityTimer(alerter, client, newState.member);
         }
         if (oldState.selfMute && !newState.selfMute) {
             console.log(`${newState.member.user.tag} [${newState.member.id}] is no longer afk in ${newState.channel.name} [${newState.channel.id}].`);
