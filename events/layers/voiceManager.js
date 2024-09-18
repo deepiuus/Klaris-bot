@@ -1,8 +1,3 @@
-// Init in main.js as: require('./events/layers/voiceManager')(client);
-const { Collection } = require('discord.js');
-const Timers = new Collection();
-
-// Layers ids
 const layers = {
     'Default': '1028732111215153182',
     'layer 2': '1057651790683832401',
@@ -15,7 +10,6 @@ const layers = {
     'layer 9': '1282024969790034063'
 };
 
-// Inactivity timers
 const Time = {
     'Default': 5 * 60 * 1000,
     'layer 2': 10 * 60 * 1000,
@@ -28,14 +22,14 @@ const Time = {
     'layer 9': 0 * 60 * 1000
 };
 
-function setInactivityTimer(member) {
+function setInactivityTimer(client, member) {
 
-    if (Timers.has(member.id)) {
-        const timerObj = Timers.get(member.id);
+    if (client.timers.has(member.id)) {
+        const timerObj = client.timers.get(member.id);
         if (timerObj) {
             const remainingTime = timerObj.remainingTime;
             console.log(`Because ${member.user.tag} [${member.id}] is already afk :`);
-            console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${remainingTime / 1000} second(s).`);
+            console.log(`Time remaining for ${member.user.tag} [${member.id}] in ${member.voice.channel.name} [${member.voice.channel.id}]: ${remainingTime / 1000} second(s).`);
         }
         return;
     }
@@ -56,65 +50,67 @@ function setInactivityTimer(member) {
     const nextLayerId = layers[nextLayer];
     const time = Time[layerName];
     let remainingTime = time;
-    console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${remainingTime / 1000} second(s). (logs with 15 seconds cooldown)`);
+    console.log(`Time remaining for ${member.user.tag} [${member.id}] in ${channel.name} [${channel.id}]: ${remainingTime / 1000} second(s). (15s logs cooldown)`);
 
     const countdownInterval = setInterval(() => {
         remainingTime -= 15000;
         console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${remainingTime / 1000} second(s).`);
         if (remainingTime <= 0)
             clearInterval(countdownInterval);
-        Timers.set(member.id, { timer, countdownInterval, remainingTime });
+        client.timers.set(member.id, { timer, countdownInterval, remainingTime });
     }, 15000);
 
     const timer = setTimeout(() => {
         console.log(`Inactivity timer triggered for ${member.user.tag} [${member.id}] in ${channel.name} [${channel.id}].`);
-        if (member.voice.channel) {
+        if (member.voice.channel)
             member.voice.setChannel(nextLayerId).catch(console.error);
-        } else {
+        else
             console.log(`${member.user.tag} is not in a voice channel.`);
-        }
     }, time);
 
-    Timers.set(member.id, { timer, countdownInterval, remainingTime });
+    client.timers.set(member.id, { timer, countdownInterval, remainingTime });
 }
 
-function clearInactivityTimer(member, previousChannel) {
+function clearInactivityTimer(client, member, previousChannel) {
 
     if (!member) {
         console.log('Skipping clearInactivityTimer.');
         return;
     }
-    const timerObj = Timers.get(member.id);
+    const timerObj = client.timers.get(member.id);
     if (timerObj) {
         console.log(`Clearing inactivity timer for ${member.user.tag} [${member.id}] in ${previousChannel.name} [${previousChannel.id}].`);
         clearTimeout(timerObj.timer);
         clearInterval(timerObj.countdownInterval);
-        Timers.delete(member.id);
+        client.timers.delete(member.id);
     }
 }
 
-module.exports = (client) => {
-    client.on('voiceStateUpdate', (oldState, newState) => {
+module.exports = {
+    name: 'voiceStateUpdate',
+    run: (client, oldState, newState) => {
         if (oldState.channelId === null && newState.channelId !== null) {
             console.log(`${newState.member.user.tag} [${newState.member.id}] joined ${newState.channel.name} [${newState.channel.id}].`);
-            if (newState.selfMute)
-                setInactivityTimer(newState.member);
+            if (newState.selfMute) {
+                setInactivityTimer(client, newState.member);
+            }
         } else if (oldState.channelId !== null && newState.channelId === null) {
             console.log(`${oldState.member.user.tag} [${oldState.member.id}] left ${oldState.channel.name} [${oldState.channel.id}].`);
-            clearInactivityTimer(oldState.member, oldState.channel);
+            clearInactivityTimer(client, oldState.member, oldState.channel);
         } else if (oldState.channelId !== null && newState.channelId !== null && oldState.channelId !== newState.channelId) {
             console.log(`${oldState.member.user.tag} [${oldState.member.id}] switched from ${oldState.channel.name} [${oldState.channel.id}] to ${newState.channel.name} [${newState.channel.id}].`);
-            clearInactivityTimer(oldState.member, oldState.channel);
-            if (newState.selfMute)
-                setInactivityTimer(newState.member);
+            clearInactivityTimer(client, oldState.member, oldState.channel);
+            if (newState.selfMute) {
+                setInactivityTimer(client, newState.member);
+            }
         }
         if (!oldState.selfMute && newState.selfMute) {
             console.log(`${newState.member.user.tag} [${newState.member.id}] is afk in ${newState.channel.name} [${newState.channel.id}].`);
-            setInactivityTimer(newState.member);
+            setInactivityTimer(client, newState.member);
         }
         if (oldState.selfMute && !newState.selfMute) {
             console.log(`${newState.member.user.tag} [${newState.member.id}] is no longer afk in ${newState.channel.name} [${newState.channel.id}].`);
-            clearInactivityTimer(newState.member, newState.channel);
+            clearInactivityTimer(client, newState.member, newState.channel);
         }
-    });
+    }
 };
