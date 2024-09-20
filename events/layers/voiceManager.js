@@ -1,5 +1,16 @@
 const alertChannel = "1071202448447901796";
 
+const roles = {
+    'discoverer': '1285314461909127168',
+    'explorer': '1285315361222168616',
+    'survivor': '1286012810974724177',
+    'wanderer': '1286012965182636203',
+    'master': '1286013145768525824',
+    'celestial': '1286013153297170513',
+    'krulian': '1286013153762869270',
+    'drowned god': '1286013153846624370'
+};
+
 const layers = {
     'depths': '1028732111215153182',
     'layer 2': '1057651790683832401',
@@ -14,13 +25,13 @@ const layers = {
 
 const timers = {
     'depths':  5 * 60 * 1000,
-    'layer 2': 10 * 60 * 1000,
+    'layer 2': 1 * 60 * 1000,
     'layer 3': 20 * 60 * 1000,
     'layer 4': 40 * 60 * 1000,
     'layer 5': 80 * 60 * 1000,
     'layer 6': 160 * 60 * 1000,
     'layer 7': 320 * 60 * 1000,
-    'layer 8': 640 * 60 * 1000,
+    'layer 8': 1 * 60 * 1000,
     'layer 9': 0 * 60 * 1000
 };
 
@@ -41,26 +52,48 @@ function initVar(client, member)
     oldLayer, oldId, newLayer, newId, time, timeLeft };
 }
 
+function assignRole(member, roleId)
+{
+    const role = member.guild.roles.cache.get(roleId);
+    console.log(`Assigning ${role.name} rank to ${member.user.tag} [${member.id}].`);
+    member.roles.add(role).catch(console.error);
+}
+
 function alerts(alerter, member, oldLayer, newLayer)
 {
-    if (oldLayer === 'depths')
+    let roleName = '';
+
+    if (oldLayer === 'depths') {
+        roleName = 'discoverer';
         alerter.send(`${member.user.tag} a fait ses preuves dans les ${oldLayer}... C'est maintenant un aventurier de puissance 15.. Interessant. Je lui autorise donc l'accès à une light hook pour le ${newLayer}, en espérant qu'il ne la consomme pas trop vite...`);
-    else if (oldLayer === 'layer 2')
+    } else if (oldLayer === 'layer 2') {
+        roleName = 'explorer';
+        alerter.send(`${member.user.tag} est finalement sortit du ${oldLayer}, en un temps record en plus... Mais il est désormais dans le ${newLayer} ? A force de creuser il va finir par atteindre le fond !`);
+    } else if (oldLayer === 'layer 3') {
+        roleName = 'survivor';
         alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}. A force de creuser il va finir par atteindre le fond !`);
-    else if (oldLayer === 'layer 3')
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}. A force de creuser il va finir par atteindre le fond !`);
-    else if (oldLayer === 'layer 4')
+    } else if (oldLayer === 'layer 4') {
+        roleName = 'wanderer';
         alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
-    else if (oldLayer === 'layer 5')
+    } else if (oldLayer === 'layer 5') {
+        roleName = 'master';
         alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
-    else if (oldLayer === 'layer 6')
+    } else if (oldLayer === 'layer 6') {
+        roleName = 'celestial';
         alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
-    else if (oldLayer === 'layer 7')
+    } else if (oldLayer === 'layer 7') {
+        roleName = 'krulian';
         alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
-    else if (oldLayer === 'layer 8')
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
-    else if (oldLayer === 'layer 9')
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
+    } else if (oldLayer === 'layer 8') {
+        roleName = 'drowned god';
+        alerter.send(`${member.user.tag} a était trop longtemps génant dans le ${oldLayer}... Il a probablement que ça a faire de ses journées, il passera donc le restant de ses jours dans le ${newLayer}.`);
+    }
+
+    if (roleName) {
+        const roleId = roles[roleName];
+        alerter.send(`${member.user.tag} est désormais un ${roleName}.`);
+        assignRole(member, roleId);
+    }
 }
 
 function noAdditionalTimer(memberTag, memberId, timerObj, channel, keys, oldLayer, oldId)
