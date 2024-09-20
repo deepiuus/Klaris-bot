@@ -1,3 +1,5 @@
+const { EmbedBuilder } = require('discord.js');
+
 const alertChannel = "1071202448447901796";
 
 const roles = {
@@ -24,13 +26,13 @@ const layers = {
 };
 
 const timers = {
-    'depths':  5 * 60 * 1000,
+    'depths':  1 * 60 * 1000,
     'layer 2': 1 * 60 * 1000,
-    'layer 3': 20 * 60 * 1000,
-    'layer 4': 40 * 60 * 1000,
-    'layer 5': 80 * 60 * 1000,
-    'layer 6': 160 * 60 * 1000,
-    'layer 7': 320 * 60 * 1000,
+    'layer 3': 1 * 60 * 1000,
+    'layer 4': 1 * 60 * 1000,
+    'layer 5': 1 * 60 * 1000,
+    'layer 6': 1 * 60 * 1000,
+    'layer 7': 1 * 60 * 1000,
     'layer 8': 1 * 60 * 1000,
     'layer 9': 0 * 60 * 1000
 };
@@ -62,36 +64,64 @@ function assignRole(member, roleId)
 function alerts(alerter, member, oldLayer, newLayer)
 {
     let roleName = '';
+    let alertEmbed = new EmbedBuilder().setColor('#0099ff');
 
     if (oldLayer === 'depths') {
         roleName = 'discoverer';
-        alerter.send(`${member.user.tag} a fait ses preuves dans les ${oldLayer}... C'est maintenant un aventurier de puissance 15.. Interessant. Je lui autorise donc l'accès à une light hook pour le ${newLayer}, en espérant qu'il ne la consomme pas trop vite...`);
+        alertEmbed
+            .setTitle(`${member.user.tag} a découvert un nouvel horizon`)
+            .setDescription(`${member.user.tag} a fait ses preuves dans les ${oldLayer}... 
+            C'est maintenant un aventurier de puissance 15. Interessant. Je lui autorise donc l'accès à une light hook pour le ${newLayer}, en espérant qu'il ne la consomme pas trop vite...`)
+            .setColor('#ff0000'); // Rouge
     } else if (oldLayer === 'layer 2') {
         roleName = 'explorer';
-        alerter.send(`${member.user.tag} est finalement sortit du ${oldLayer}, en un temps record en plus... Mais il est désormais dans le ${newLayer} ? A force de creuser il va finir par atteindre le fond !`);
+        alertEmbed
+            .setTitle(`${member.user.tag} continue d'explorer`)
+            .setDescription(`${member.user.tag} est finalement sorti du ${oldLayer} en un temps record... 
+            Mais il est désormais dans le ${newLayer} ? À force de creuser il va finir par atteindre le fond !`)
+            .setColor('#ff66b2'); // Rose
     } else if (oldLayer === 'layer 3') {
         roleName = 'survivor';
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}. A force de creuser il va finir par atteindre le fond !`);
+        alertEmbed
+            .setTitle(`${member.user.tag} a survécu et progresse`)
+            .setDescription(`${member.user.tag} a trouvé comment faire pour rendre plus beau mon texte dans le ${oldLayer}... 
+            Il a donc atteint le ${newLayer}.`)
+            .setColor('#660066'); // Violet foncé
     } else if (oldLayer === 'layer 4') {
         roleName = 'wanderer';
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
+        alertEmbed
+            .setTitle(`${member.user.tag} erre encore dans les profondeurs`)
+            .setDescription(`${member.user.tag} a été inactif trop longtemps dans le ${oldLayer}... Il a donc atteint le ${newLayer}.`)
+            .setColor('#800000'); // Bordeaux
     } else if (oldLayer === 'layer 5') {
         roleName = 'master';
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
+        alertEmbed
+            .setTitle(`${member.user.tag} est maintenant maître de son destin`)
+            .setDescription(`${member.user.tag} a été inactif trop longtemps dans le ${oldLayer}... Il a donc atteint le ${newLayer}.`)
+            .setColor('#ffd700'); // Doré
     } else if (oldLayer === 'layer 6') {
         roleName = 'celestial';
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
+        alertEmbed
+            .setTitle(`${member.user.tag} touche les cieux`)
+            .setDescription(`${member.user.tag} a été inactif trop longtemps dans le ${oldLayer}... Il a donc atteint le ${newLayer}.`)
+            .setColor('#40e0d0'); // Turquoise
     } else if (oldLayer === 'layer 7') {
         roleName = 'krulian';
-        alerter.send(`${member.user.tag} a était trop longtemps inactif dans le(s) ${oldLayer}... Il a donc atteint le ${newLayer}.`);
+        alertEmbed
+            .setTitle(`${member.user.tag} est devenu un Krulian`)
+            .setDescription(`${member.user.tag} a été inactif trop longtemps dans le ${oldLayer}... Il a donc atteint le ${newLayer}.`)
+            .setColor('#ffffff'); // Blanc
     } else if (oldLayer === 'layer 8') {
         roleName = 'drowned god';
-        alerter.send(`${member.user.tag} a était trop longtemps génant dans le ${oldLayer}... Il a probablement que ça a faire de ses journées, il passera donc le restant de ses jours dans le ${newLayer}.`);
+        alertEmbed
+            .setTitle(`T'es une merde ${member.user.tag}`)
+            .setDescription(`${member.user.tag} a probablement que ça à faire de ses journées... Il passera donc le restant de ses jours dans le ${newLayer}.`)
+            .setColor('#000000'); // Noir
     }
-
     if (roleName) {
         const roleId = roles[roleName];
-        alerter.send(`${member.user.tag} est désormais un ${roleName}.`);
+        alertEmbed.setFooter({ text: `${member.user.tag} est désormais un ${roleName}.` });
+        alerter.send({ embeds: [alertEmbed] });
         assignRole(member, roleId);
     }
 }

@@ -1,4 +1,4 @@
-const { Client, IntentsBitField, Collection } = require('discord.js');
+const { Client, IntentsBitField, Collection, MessageEmbed } = require('discord.js');
 const client = new Client({intents: new IntentsBitField(53608447)});
 const loadCommands = require('./loaders/loadCommands');
 const loadEvents = require('./loaders/loadEvents');
