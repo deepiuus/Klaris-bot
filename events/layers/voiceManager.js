@@ -88,7 +88,7 @@ function alerts(alerter, member, oldLayer, newLayer)
         roleName = 'wanderer';
         alertEmbed
             .setTitle(`【Retour aux temps obscurs】`)
-            .setDescription(`${member.user.tag} a fait sa traversée du désert au ${oldLayer}, et il met de plus en plus difficile de le contacter. Il va sans dire que son accession au ${newLayer}, s'inscrira neanmoins dans la légende !`)
+            .setDescription(`${member.user.tag} a fait sa traversée du désert au ${oldLayer}, et il m'est de plus en plus difficile de le contacter. Il va sans dire que son accession au ${newLayer}, s'inscrira neanmoins dans la légende !`)
             .setColor('#800000'); // Bordeaux
     } else if (oldLayer === 'layer 5') {
         roleName = 'master';
