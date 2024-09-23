@@ -1,5 +1,4 @@
 const { alerts } = require('./roleManager');
-
 const layers = {
     'depths': '1028732111215153182',
     'layer 2': '1057651790683832401',
@@ -11,14 +10,13 @@ const layers = {
     'layer 8': '1282024956045168691',
     'layer 9': '1282024969790034063'
 };
-
 const timers = {
     'depths':  5 * 60 * 1000,
     'layer 2': 10 * 60 * 1000,
     'layer 3': 20 * 60 * 1000,
     'layer 4': 40 * 60 * 1000,
     'layer 5': 80 * 60 * 1000,
-    'layer 6': 1 * 60 * 1000,
+    'layer 6': 160 * 60 * 1000,
     'layer 7': 320 * 60 * 1000,
     'layer 8': 640 * 60 * 1000,
     'layer 9': 0 * 60 * 1000
