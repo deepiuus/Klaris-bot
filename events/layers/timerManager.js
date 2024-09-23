@@ -18,13 +18,13 @@ const timers = {
     'layer 3': 20 * 60 * 1000,
     'layer 4': 40 * 60 * 1000,
     'layer 5': 80 * 60 * 1000,
-    'layer 6': 160 * 60 * 1000,
+    'layer 6': 1 * 60 * 1000,
     'layer 7': 320 * 60 * 1000,
     'layer 8': 640 * 60 * 1000,
     'layer 9': 0 * 60 * 1000
 };
 
-function noAdditionalTimer(memberTag, memberId, timerObj, channel, keys, oldLayer, oldId)
+function additionalTimer(memberTag, memberId, timerObj, channel, keys, oldLayer, oldId)
 {
     if (timerObj) {
         timeLeft = timerObj.timeLeft;
@@ -37,6 +37,31 @@ function noAdditionalTimer(memberTag, memberId, timerObj, channel, keys, oldLaye
         return true;
     }
     return false;
+}
+
+function initCountdown(client, member, timeLeft, timer)
+{
+    const countdown = setInterval(() => {
+        timeLeft -= 15000;
+        console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${timeLeft / 1000} second(s).`);
+        if (timeLeft <= 0)
+            clearInterval(countdown);
+        client.timers.set(member.id, { timer, countdown, timeLeft });
+    }, 15000);
+    return countdown;
+}
+
+function triggeredTimer(alerter, member, channel, oldLayer, newLayer, newId, time)
+{
+    const timer = setTimeout(() => {
+        console.log(`Inactivity timer triggered for ${member.user.tag} [${member.id}] in ${channel.name} [${channel.id}].`);
+        alerts(alerter, member, oldLayer, newLayer);
+        if (member.voice.channel)
+            member.voice.setChannel(newId).catch(console.error);
+        else
+            console.log(`${member.user.tag} is not in a voice channel.`);
+    }, time);
+    return timer;
 }
 
 function initVar(client, member)
@@ -58,30 +83,18 @@ function initVar(client, member)
 
 function setInactivityTimer(alerter, client, member)
 {
+    let timer;
+    let countdown;
     const vars = initVar(client, member);
     let { memberId, memberTag, channel, keys, timerObj, oldLayer, oldId,
     newLayer, newId, time, timeLeft } = vars;
 
-    if (noAdditionalTimer(memberTag, memberId, timerObj, channel, keys, oldLayer, oldId)) return;
+    if (additionalTimer(memberTag, memberId, timerObj, channel, keys, oldLayer, oldId))
+        return;
     console.log(`Setting inactivity timer for ${memberTag} [${memberId}] in ${channel.name} [${channel.id}].`);
-    const countdownInterval = setInterval(() => {
-        timeLeft -= 15000;
-        console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${timeLeft / 1000} second(s).`);
-        if (timeLeft <= 0)
-            clearInterval(countdownInterval);
-        client.timers.set(member.id, { timer, countdownInterval, timeLeft });
-    }, 15000);
-
-    const timer = setTimeout(() => {
-        console.log(`Inactivity timer triggered for ${member.user.tag} [${member.id}] in ${channel.name} [${channel.id}].`);
-        alerts(alerter, member, oldLayer, newLayer);
-        if (member.voice.channel)
-            member.voice.setChannel(newId).catch(console.error);
-        else
-            console.log(`${member.user.tag} is not in a voice channel.`);
-    }, time);
-
-    client.timers.set(member.id, { timer, countdownInterval, timeLeft });
+    timer = triggeredTimer(alerter, member, channel, oldLayer, newLayer, newId, time);
+    countdown = initCountdown(client, member, timeLeft, timer);
+    client.timers.set(member.id, { timer, countdown, timeLeft });
     console.log(`Time remaining for ${member.user.tag} [${member.id}]: ${timeLeft / 1000} second(s). (15s logs cooldown)`);
 }
 
@@ -92,7 +105,7 @@ function clearInactivityTimer(client, member, previousChannel)
     if (timerObj) {
         console.log(`Clearing inactivity timer for ${member.user.tag} [${member.id}] in ${previousChannel.name} [${previousChannel.id}].`);
         clearTimeout(timerObj.timer);
-        clearInterval(timerObj.countdownInterval);
+        clearInterval(timerObj.countdown);
         client.timers.delete(member.id);
     }
 }
