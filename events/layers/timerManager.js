@@ -16,26 +16,11 @@ const timers = {
     'layer 3': 20 * 60 * 1000,
     'layer 4': 40 * 60 * 1000,
     'layer 5': 80 * 60 * 1000,
-    'layer 6': 1 * 60 * 1000,
+    'layer 6': 160 * 60 * 1000,
     'layer 7': 320 * 60 * 1000,
     'layer 8': 640 * 60 * 1000,
     'layer 9': 0 * 60 * 1000
 };
-
-function additionalTimer(memberTag, memberId, timerObj, channel, keys, oldLayer, oldId)
-{
-    if (timerObj) {
-        timeLeft = timerObj.timeLeft;
-        console.log(`Because ${memberTag} [${memberId}] is already afk :`);
-        console.log(`Time remaining for ${memberTag} [${memberId}]: ${timeLeft / 1000} second(s).`);
-        return true;
-    }
-    if (oldId === keys.length - 1) {
-        console.log(`No timer set for the last layer: ${oldLayer} [${channel.id}].`);
-        return true;
-    }
-    return false;
-}
 
 function initCountdown(client, member, timeLeft, timer)
 {
@@ -57,9 +42,24 @@ function triggeredTimer(alerter, member, channel, oldLayer, newLayer, newId, tim
         if (member.voice.channel)
             member.voice.setChannel(newId).catch(console.error);
         else
-            console.log(`${member.user.tag} is not in a voice channel.`);
+        console.log(`${member.user.tag} is not in a voice channel.`);
     }, time);
     return timer;
+}
+
+function additionalTimer(memberTag, memberId, timerObj, channel, keys, oldLayer, oldId)
+{
+    if (timerObj) {
+        timeLeft = timerObj.timeLeft;
+        console.log(`Because ${memberTag} [${memberId}] is already afk :`);
+        console.log(`Time remaining for ${memberTag} [${memberId}]: ${timeLeft / 1000} second(s).`);
+        return true;
+    }
+    if (oldId === keys.length - 1) {
+        console.log(`No timer set for the last layer: ${oldLayer} [${channel.id}].`);
+        return true;
+    }
+    return false;
 }
 
 function initVar(client, member)
