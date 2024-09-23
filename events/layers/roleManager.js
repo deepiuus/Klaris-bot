@@ -12,10 +12,12 @@ const roles = {
 
 function assignRole(member, roleName, result, alerter)
 {
-    if (result.roleName) {
-        const roleId = roles[roleName];
-        const role = member.guild.roles.cache.get(roleId);
+    let roleId;
+    let role;
 
+    if (result.roleName) {
+        roleId = roles[roleName];
+        role = member.guild.roles.cache.get(roleId);
         console.log(`Assigning ${role.name} rank to ${member.user.tag} [${member.id}].`);
         member.roles.add(role).catch(console.error);
         alerter.send({ embeds: [result.alertEmbed] });
