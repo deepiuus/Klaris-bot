@@ -10,17 +10,27 @@ const roles = {
     'drowned god': '1286013153846624370'
 };
 
-function assignRole(member, roleName, result, alerter)
+async function assignRole(member, roleName, result, alerter)
 {
-    let roleId;
-    let role;
-
     if (result.roleName) {
-        roleId = roles[roleName];
-        role = member.guild.roles.cache.get(roleId);
+        const roleId = roles[roleName];
+        const role = member.guild.roles.cache.get(roleId);
+
+        if (!role) {
+            console.error(`Role ${roleName} not found in guild.`);
+            return;
+        }
+
         console.log(`Assigning ${role.name} rank to ${member.user.tag} [${member.id}].`);
-        member.roles.add(role).catch(console.error);
-        alerter.send({ embeds: [result.alertEmbed] });
+        result.alertEmbed.setFooter({ text: `Il est désormais considéré comme un ${roleName}.` });
+
+        try {
+            await member.roles.add(role);
+            console.log(`Role ${role.name} added to ${member.user.tag}.`);
+            alerter.send({ embeds: [result.alertEmbed] });
+        } catch (error) {
+            console.error(`Failed to add role ${role.name} to ${member.user.tag}:`, error);
+        }
     }
 }
 
@@ -108,18 +118,19 @@ function noob(member, oldLayer, newLayer, alertEmbed)
     return { roleName, alertEmbed };
 }
 
-function alerts(alerter, member, oldLayer, newLayer)
+async function alerts(alerter, member, oldLayer, newLayer)
 {
     let alertEmbed = new EmbedBuilder().setColor('#0099ff');
     let result;
 
     result = noob(member, oldLayer, newLayer, alertEmbed);
-    assignRole(member, result.roleName, result, alerter);
+    await assignRole(member, result.roleName, result, alerter);
     result = expert(member, oldLayer, newLayer, alertEmbed);
-    assignRole(member, result.roleName, result, alerter);
+    await assignRole(member, result.roleName, result, alerter);
     result = veteran(member, oldLayer, newLayer, alertEmbed);
-    assignRole(member, result.roleName, result, alerter);
+    await assignRole(member, result.roleName, result, alerter);
     result = legend(member, oldLayer, newLayer, alertEmbed);
+    await assignRole(member, result.roleName, result, alerter);
 }
 
 module.exports = { alerts };
