@@ -12,18 +12,18 @@ const roles = {
 
 async function assignRole(member, roleName, result, alerter)
 {
-    if (result.roleName) {
-        const roleId = roles[roleName];
-        const role = member.guild.roles.cache.get(roleId);
+    let roleId;
+    let role;
 
+    if (result.roleName) {
+        roleId = roles[roleName];
+        role = member.guild.roles.cache.get(roleId);
         if (!role) {
             console.error(`Role ${roleName} not found in guild.`);
             return;
         }
-
         console.log(`Assigning ${role.name} rank to ${member.user.tag} [${member.id}].`);
         result.alertEmbed.setFooter({ text: `Il est désormais considéré comme un ${roleName}.` });
-
         try {
             await member.roles.add(role);
             console.log(`Role ${role.name} added to ${member.user.tag}.`);
