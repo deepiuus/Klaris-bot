@@ -15,7 +15,7 @@ loadEvents(client);
 const originLogs = console.log;
 console.log = function(message) {
     originLogs(message);
-    channelLogs(message);
+    channelLogs(client, message);
 };
 
 client.on("messageCreate", async message => {
