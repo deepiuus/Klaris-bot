@@ -22,6 +22,10 @@ async function assignRole(member, roleName, result, alerter)
             console.error(`Role ${roleName} not found in guild.`);
             return;
         }
+        if (member.roles.cache.has(roleId)) {
+            console.log(`${member.user.tag} already has the role ${role.name}.`);
+            return;
+        }
         console.log(`Assigning ${role.name} rank to ${member.user.tag} [${member.id}].`);
         result.alertEmbed.setFooter({ text: `Il est désormais considéré comme un ${roleName}.` });
         try {
