@@ -6,4 +6,4 @@
 #### Powered by railway-app for the time being
 ![Capture d’écran 2024-10-10 151446](https://github.com/user-attachments/assets/3e940378-5fe0-4b52-8713-d1652f08faa5)
 
-*A discord bot for my personal use on the server of my Deepwoken Guild*
+*A Discord bot for personal use on my Deepwoken Guild server*
